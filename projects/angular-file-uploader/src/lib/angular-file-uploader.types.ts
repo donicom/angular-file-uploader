@@ -23,6 +23,7 @@ export interface AngularFileUploaderConfig {
   uploadAPI: UploadApi;
 
   theme?: string;
+  paramsType?: 'body' | 'url';
   id?: number;
   hideProgressBar?: boolean;
   hideResetBtn?: boolean;

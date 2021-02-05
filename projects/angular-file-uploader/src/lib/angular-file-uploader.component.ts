@@ -53,6 +53,7 @@ export class AngularFileUploaderComponent implements OnChanges {
   multiple: boolean;
   headers: HttpHeaders | { [header: string]: string | string[] };
   params: HttpParams | { [param: string]: string | string[] };
+  paramsType: string;
   responseType: string;
   hideResetBtn: boolean;
   hideSelectBtn: boolean;
@@ -78,7 +79,7 @@ export class AngularFileUploaderComponent implements OnChanges {
 
   private idDate: number = +new Date();
 
-  constructor(@SkipSelf() private http: HttpClient) {}
+  constructor(@SkipSelf() private http: HttpClient) { }
 
   ngOnChanges(changes: SimpleChanges) {
     // Track changes in Configuration and see if user has even provided Configuration.
@@ -88,7 +89,7 @@ export class AngularFileUploaderComponent implements OnChanges {
       this.id =
         this.config.id ||
         parseInt((this.idDate / 10000).toString().split('.')[1], 10) +
-          Math.floor(Math.random() * 20) * 10000;
+        Math.floor(Math.random() * 20) * 10000;
       this.hideProgressBar = this.config.hideProgressBar || false;
       this.hideResetBtn = this.config.hideResetBtn || false;
       this.hideSelectBtn = this.config.hideSelectBtn || false;
@@ -100,6 +101,7 @@ export class AngularFileUploaderComponent implements OnChanges {
       this.multiple = this.config.multiple || false;
       this.headers = this.config.uploadAPI.headers || {};
       this.params = this.config.uploadAPI.params || {};
+      this.paramsType = this.config.paramsType || 'url';
       this.responseType = this.config.uploadAPI.responseType || null;
       this.fileNameIndex = this.config.fileNameIndex === false ? false : true;
       this.replaceTexts = {
@@ -212,6 +214,26 @@ export class AngularFileUploaderComponent implements OnChanges {
       );
     });
 
+
+    if (this.paramsType == 'body') {
+      if (this.params instanceof HttpParams) {
+        for (const key of Object.keys(this.params)) {
+          formData.append(key, this.params[key]);
+        }
+      } else if(typeof this.params === 'object') {
+        for (const key of Object.keys(this.params)) {
+            let values = this.params[key];
+            if(Array.isArray(values)) {
+              values.forEach(value => {
+                formData.append(key, value);
+              });
+            } else {
+              formData.append(key, values);
+            }
+        }
+      }
+    }
+
     /*
     Not Working, Headers null
     // Contruct Headers
@@ -226,9 +248,14 @@ export class AngularFileUploaderComponent implements OnChanges {
       params.append(key, this.params[key]);
     } */
 
-    const options = {
+    let urlParams = null;
+    if (this.paramsType == 'url') {
+      urlParams = this.paramsType;
+    }
+
+    var options = {
       headers: this.headers,
-      params: this.params,
+      params: urlParams,
     };
 
     if (this.responseType) (options as any).responseType = this.responseType;
